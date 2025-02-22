@@ -1,8 +1,6 @@
 <script setup>
 import { ref } from 'vue'
-
 defineProps(['label'])
-const counter = ref(0)
 </script>
 
 <template>

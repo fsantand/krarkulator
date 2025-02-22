@@ -2,39 +2,121 @@
 import Counter from './components/Counter.vue'
 import Button from './components/Button.vue'
 import ButtonWithField from './components/ButtonWithField.vue'
-import KrarkCopies from './components/KrarkCopies.vue'
 import SettingCheck from './components/SettingCheck.vue'
 import Logs from './components/Logs.vue'
 import { ref } from 'vue'
 
 const logs = ref([])
 
-const krarkThumb = ref(false)
-const tavernScoundrel = ref(false)
-const stormKilnArtist = ref(false)
-const veyran = ref(false)
-const harmonicProdigy = ref(false)
+const krarkCopies = ref(0);
 
-const wonFlips = ref(0)
-const lostFlips = ref(0)
-const stormCount = ref(0)
-const redMana = ref(0)
-const treasures = ref(0)
+const krarkThumb = ref(false);
+const tavernScoundrel = ref(false);
+const stormKilnArtist = ref(false);
+const birgi = ref(false);
+const veyran = ref(false);
+const harmonicProdigy = ref(false);
+
+const wonFlips = ref(0);
+const lostFlips = ref(0);
+const stormCount = ref(0);
+const redMana = ref(0);
+const treasures = ref(0);
+
+const ritualManaAmount = ref(0);
 
 function logAction(message) {
   logs.value.push(message)
 }
 
-function castSpell() {
+function flipCoin() {
+  return Math.random() >= 0.5;
 }
 
+function flipCoins(triggerAmount) {
+  const flippedCoins = Array(krarkCopies.value * triggerAmount).fill(0).map(flipCoin);
+  if (krarkThumb.value) {
+    console.log("WIP");
+  }
+  return {
+    wonFlips: flippedCoins.filter((x) => x === true).length,
+    lostFlips: flippedCoins.filter((x) => x === false).length,
+    choiceFlips: 0,
+  };
+}
+
+function getTriggerAmount() {
+  console.log(1 + +veyran.value + +harmonicProdigy.value)
+  return 1 + +veyran.value + +harmonicProdigy.value
+}
+
+function castValidations(triggerAmount) {
+  if (birgi.value) {
+    increaseRedMana(1*triggerAmount);
+  }
+  if (stormKilnArtist.value) {
+    increaseTreasures(1*triggerAmount);
+  }
+}
+
+function copyValidations(copyAmount, triggerAmount) {
+  if (stormKilnArtist.value) {
+    increaseTreasures(1*copyAmount*triggerAmount)
+  }
+}
+
+function increaseRedMana(x) {
+  redMana.value = redMana.value + x;
+}
+
+function increaseTreasures(x) {
+  treasures.value = treasures.value + x;
+}
+
+function increaseStormCount() {
+  stormCount.value++;
+}
+
+//Actions
 function castRitual() {
+  logAction({
+    message: `Casting a ritual of ${ritualManaAmount.value} mana...`,
+    ritualAmount: ritualManaAmount.value,
+  });
+  const triggerAmount = getTriggerAmount();
+  increaseStormCount()
+  castValidations(triggerAmount)
+  const result = flipCoins(triggerAmount);
+  wonFlips.value = result.wonFlips;
+  lostFlips.value = result.lostFlips;
+  copyValidations(result.wonFlips, triggerAmount);
+  increaseRedMana(result.wonFlips * ritualManaAmount.value)
+  logAction({message: `The cast cointains ${wonFlips.value} won flips and ${lostFlips.value} lost flips`});
+}
+
+function castSpell() {
+  logAction({
+    message: `Casting a spell...`,
+    ritualAmount: ritualManaAmount.value,
+  });
+
+  const triggerAmount = getTriggerAmount();
+  increaseStormCount();
+  castValidations(triggerAmount)
+  const result = flipCoins(triggerAmount);
+  wonFlips.value = result.wonFlips;
+  lostFlips.value = result.lostFlips;
+  copyValidations(result.wonFlips, triggerAmount);
+  logAction({message: `The cast cointains ${wonFlips.value} won flips and ${lostFlips.value} lost flips`});
 }
 
 function nextTurn() {
   stormCount.value = 0;
   redMana.value = 0;
   treasures.value = 0;
+  logAction({
+    message: 'Going into next turn'
+  });
 }
 
 </script>
@@ -47,8 +129,8 @@ function nextTurn() {
   <main>
     <div class="container">
       <div class="row">
-        <Button @click="flipCoins" class="four columns" label="Cast" />
-        <ButtonWithField class="four columns" label="Cast ritual" />
+        <Button @click="castSpell" class="four columns" label="Cast" />
+        <ButtonWithField @on-cast="castRitual" v-model='ritualManaAmount' class="four columns" label="Cast ritual" />
         <Button @click="nextTurn" class="four columns" label="Next Turn" />
       </div>
     </div>
@@ -70,7 +152,7 @@ function nextTurn() {
           <h2>Settings</h2>
           <div>
             <label for="krarkCopies">Krark copies</label>
-            <input class="u-full-width" type="number" name="krarkCopies" />
+            <input class="u-full-width" type="number" v-model="krarkCopies" />
           </div>
           <h4>Flips</h4>
           <SettingCheck
@@ -88,6 +170,11 @@ function nextTurn() {
             @click="logAction({ message: 'Storm-Kiln Artist toggled', value: stormKilnArtist })"
             v-model="stormKilnArtist"
             label="Storm Kiln Artist"
+          />
+          <SettingCheck
+            @click="logAction({ message: 'Birgi, God of Storytelling toggled', value: birgi })"
+            v-model="birgi"
+            label="Birgi, God of Storytelling"
           />
           <h4>Double Triggers</h4>
           <SettingCheck
