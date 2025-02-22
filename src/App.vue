@@ -8,7 +8,7 @@ import { ref } from 'vue'
 
 const logs = ref([])
 
-const krarkCopies = ref(0);
+const krarkCopies = ref(1);
 
 const krarkThumb = ref(false);
 const tavernScoundrel = ref(false);
@@ -30,23 +30,44 @@ function logAction(message) {
 }
 
 function flipCoin() {
-  return Math.random() >= 0.5;
+  return Math.random() >= 0.5 ? 1 : 0;
 }
 
 function flipCoins(triggerAmount) {
   const flippedCoins = Array(krarkCopies.value * triggerAmount).fill(0).map(flipCoin);
-  if (krarkThumb.value) {
-    console.log("WIP");
+
+  if (!krarkThumb.value) {
+    return {
+      wonFlips: flippedCoins.filter(x => x === 1).length,
+      lostFlips: flippedCoins.filter(x => x === 0).length,
+      choiceFlips: 0,
+    }
+  }
+
+  for (let i = 0; i < flippedCoins.length; i++) {
+    flippedCoins[i] = flippedCoins[i]+flipCoin()
+  }
+
+  return {
+    wonFlips: flippedCoins.filter(x => x === 2).length,
+    lostFlips: flippedCoins.filter(x => x === 0).length,
+    choiceFlips: flippedCoins.filter(x => x === 1).length,
+  }
+}
+
+function optimizeFlips({wonFlips, lostFlips, choiceFlips}) {
+  logAction({message: `Optimizing flips: ${wonFlips} won, ${lostFlips} lost, ${choiceFlips} to choose`})
+  if (lostFlips == 0 && choiceFlips > 0) {
+    choiceFlips--;
+    lostFlips++;
   }
   return {
-    wonFlips: flippedCoins.filter((x) => x === true).length,
-    lostFlips: flippedCoins.filter((x) => x === false).length,
-    choiceFlips: 0,
-  };
+    wonFlips: wonFlips+choiceFlips,
+    lostFlips: lostFlips,
+  }
 }
 
 function getTriggerAmount() {
-  console.log(1 + +veyran.value + +harmonicProdigy.value)
   return 1 + +veyran.value + +harmonicProdigy.value
 }
 
@@ -65,12 +86,18 @@ function copyValidations(copyAmount, triggerAmount) {
   }
 }
 
+function flipValidations(flipAmount) {
+  if (tavernScoundrel.value) {
+    increaseTreasures(2*flipAmount);
+  }
+}
+
 function increaseRedMana(x) {
-  redMana.value = redMana.value + x;
+  redMana.value = x;
 }
 
 function increaseTreasures(x) {
-  treasures.value = treasures.value + x;
+  treasures.value = x;
 }
 
 function increaseStormCount() {
@@ -86,10 +113,14 @@ function castRitual() {
   const triggerAmount = getTriggerAmount();
   increaseStormCount()
   castValidations(triggerAmount)
-  const result = flipCoins(triggerAmount);
+  let result = flipCoins(triggerAmount);
+  if (krarkThumb.value) {
+    result = optimizeFlips(result);
+  }
   wonFlips.value = result.wonFlips;
   lostFlips.value = result.lostFlips;
   copyValidations(result.wonFlips, triggerAmount);
+  flipValidations(result.wonFlips);
   increaseRedMana(result.wonFlips * ritualManaAmount.value)
   logAction({message: `The cast cointains ${wonFlips.value} won flips and ${lostFlips.value} lost flips`});
 }
@@ -103,9 +134,13 @@ function castSpell() {
   const triggerAmount = getTriggerAmount();
   increaseStormCount();
   castValidations(triggerAmount)
-  const result = flipCoins(triggerAmount);
+  let result = flipCoins(triggerAmount);
+  if (krarkThumb.value) {
+    result = optimizeFlips(result);
+  }
   wonFlips.value = result.wonFlips;
   lostFlips.value = result.lostFlips;
+  flipValidations(result.wonFlips);
   copyValidations(result.wonFlips, triggerAmount);
   logAction({message: `The cast cointains ${wonFlips.value} won flips and ${lostFlips.value} lost flips`});
 }
@@ -114,6 +149,9 @@ function nextTurn() {
   stormCount.value = 0;
   redMana.value = 0;
   treasures.value = 0;
+  wonFlips.value = 0;
+  lostFlips.value = 0;
+
   logAction({
     message: 'Going into next turn'
   });
