@@ -1,17 +1,15 @@
 <script setup>
-import {ref} from 'vue'
-
 defineProps(['title'])
-const counter = ref(0)
+const counter = defineModel()
 </script>
 
 <template>
   <div>
     <div class="centered">
-      <b>{{title}}</b>
+      <b>{{ title }}</b>
     </div>
     <div class="centered number">
-      {{counter}}
+      {{ counter }}
     </div>
   </div>
 </template>

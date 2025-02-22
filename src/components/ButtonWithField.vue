@@ -1,5 +1,5 @@
 <script setup>
-import {ref} from 'vue'
+import { ref } from 'vue'
 
 defineProps(['label'])
 const counter = ref(0)
@@ -7,7 +7,7 @@ const counter = ref(0)
 
 <template>
   <div>
-    <button class="button u-full-width">{{label}}</button>
+    <button class="button u-full-width">{{ label }}</button>
     <input type="number" class="u-full-width" name="generatedMana" />
   </div>
 </template>

@@ -1,15 +1,16 @@
 <script setup>
-import { ref } from 'vue'
-
 defineProps(['label'])
-const active = false;
+const model = defineModel({ required: true })
+
+function update() {
+  model.value = !model.value
+}
 </script>
 
 <template>
   <div>
-    <button
-      @click="active = !active"
-      class="u-full-width"
-      :class="{active: button-primary}">{{label}}</button>
+    <button @click="update" class="u-full-width button" :class="{ 'button-primary': model }">
+      {{ label }}
+    </button>
   </div>
 </template>
