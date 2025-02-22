@@ -145,6 +145,27 @@ function castSpell() {
   logAction({message: `The cast cointains ${wonFlips.value} won flips and ${lostFlips.value} lost flips`});
 }
 
+function castSpellWithStorm() {
+  logAction({
+    message: `Casting a spell with storm...`,
+    ritualAmount: ritualManaAmount.value,
+  });
+
+  const triggerAmount = getTriggerAmount();
+  castValidations(triggerAmount)
+  let result = flipCoins(triggerAmount);
+  if (krarkThumb.value) {
+    result = optimizeFlips(result);
+  }
+  wonFlips.value = result.wonFlips;
+  lostFlips.value = result.lostFlips;
+  flipValidations(result.wonFlips);
+  copyValidations(result.wonFlips, triggerAmount);
+  logAction({message: `The cast cointains ${wonFlips.value} won flips and ${lostFlips.value} lost flips`});
+  logAction({message: `The amount of copies of the spell is ${wonFlips.value + stormCount.value}`});
+  increaseStormCount();
+}
+
 function nextTurn() {
   stormCount.value = 0;
   redMana.value = 0;
@@ -167,9 +188,10 @@ function nextTurn() {
   <main>
     <div class="container">
       <div class="row">
-        <Button @click="castSpell" class="four columns" label="Cast" />
-        <ButtonWithField @on-cast="castRitual" v-model='ritualManaAmount' class="four columns" label="Cast ritual" />
-        <Button @click="nextTurn" class="four columns" label="Next Turn" />
+        <Button @click="castSpell" class="three columns" label="Cast" />
+        <Button @click="castSpellWithStorm" class="three columns" label="Cast with Storm" />
+        <ButtonWithField @on-cast="castRitual" v-model='ritualManaAmount' class="three columns" label="Cast ritual" />
+        <Button @click="nextTurn" class="three columns" label="Next Turn" />
       </div>
     </div>
     <hr />
